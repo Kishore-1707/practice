@@ -1,0 +1,96 @@
+resource "azurerm_virtual_network" "kishnet" {
+  name = local.virtual_network_name
+  resource_group_name = local.resource_group_name
+  location = local.resource_location[0]
+  address_space =local.address_space_prefixes
+}
+
+resource "azurerm_subnet" "kishsuba" {
+  name = local.subnet_name[0]
+  address_prefixes = [local.subnet_address_prefixes[0]]
+  virtual_network_name = local.virtual_network_name
+  resource_group_name = local.resource_group_name
+  
+}
+
+resource "azurerm_subnet" "kishsubb" {
+  name = local.subnet_name[1]
+  address_prefixes = [local.subnet_address_prefixes[1]]
+  virtual_network_name = local.virtual_network_name
+  resource_group_name = local.resource_group_name
+  
+}
+/*
+resource "azurerm_network_interface" "kishnic" {
+  name = "kish-nic"
+  resource_group_name = local.resource_group_name
+  location = local.resource_location[0]
+  ip_configuration {
+    name = "internal"
+    subnet_id = azurerm_subnet.kishsuba.id
+    private_ip_address_allocation = "Dynamic"
+    public_ip_address_id = azurerm_public_ip.kiship.id
+  }  
+}
+
+resource "azurerm_public_ip" "kiship" {
+  name = "kiship"
+  resource_group_name = local.resource_group_name
+  location = local.resource_location[0]
+  allocation_method = "Static"
+}
+
+resource "azurerm_network_interface" "dummynic" {
+  name = "dummy-nic"
+  resource_group_name = local.resource_group_name
+  location = local.resource_location[0]
+  ip_configuration {
+    name = "internal"
+    subnet_id = azurerm_subnet.kishsuba.id
+    private_ip_address_allocation = "Dynamic"
+    public_ip_address_id = azurerm_public_ip.dummyip.id
+  }  
+}
+
+resource "azurerm_public_ip" "dummyip" {
+  name = "dummyip"
+  resource_group_name = local.resource_group_name
+  location = local.resource_location[0]
+  allocation_method = "Static"
+}
+*/
+
+
+resource "azurerm_network_security_group" "kishnsg" {
+  name = "kish-nsg"
+  resource_group_name = local.resource_group_name
+  location = local.resource_location[0]
+
+  security_rule {
+    name                       = "AllowRDP"
+    priority                   = 300
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_range     = "3389"
+    source_address_prefix      = "*"
+    destination_address_prefix = "*"
+  }
+  
+}
+
+resource "azurerm_subnet_network_security_group_association" "subone" {
+  subnet_id = azurerm_subnet.kishsuba.id
+  network_security_group_id =azurerm_network_security_group.kishnsg.id
+}
+
+resource "azurerm_subnet_network_security_group_association" "subtwo" {
+  subnet_id = azurerm_subnet.kishsubb.id
+  network_security_group_id = azurerm_network_security_group.kishnsg.id
+}
+
+
+
+
+
